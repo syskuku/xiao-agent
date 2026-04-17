@@ -1,20 +1,20 @@
-# 小爱音箱 + 小米Mimo模型 + 浏览器控制系统
+# 小爱音箱 + AI模型 + 浏览器控制系统
 
 ## 系统概述
 
-本系统基于 `xiaomusic` 项目原理，实现通过小爱音箱语音指令控制浏览器的完整解决方案。系统使用小米Mimo模型（OpenAI兼容格式）解析自然语言指令，并通过浏览器插件执行相应的浏览器操作。
+本系统基于 `xiaomusic` 项目原理，实现通过小爱音箱语音指令控制浏览器的完整解决方案。系统使用支持OpenAI兼容格式的AI模型解析自然语言指令，并通过浏览器插件执行相应的浏览器操作。
 
 ## 系统架构
 
 ```
-小爱音箱语音 → 小米云端 → xiaomusic对话记录获取 → 小米Mimo模型解析 → WebSocket转发 → Chrome插件 → 浏览器操作
+小爱音箱语音 → 小米云端 → xiaomusic对话记录获取 → AI模型解析 → WebSocket转发 → Chrome插件 → 浏览器操作
 ```
 
 ## 核心组件
 
 ### 1. 后端服务 (Python)
 - 基于 `xiaomusic` 修改，保留其对话记录获取功能
-- 集成小米Mimo模型API（OpenAI兼容格式）
+- 集成AI模型API（OpenAI兼容格式）
 - WebSocket服务器，用于与浏览器插件通信
 - 指令解析和路由
 
@@ -34,7 +34,7 @@
 ### 前置条件
 1. 小米账号和密码
 2. 小爱音箱设备
-3. 小米Mimo模型API Key（从 platform.xiaomimimo.com 获取）
+3. AI模型API Key（从 platform.xiaomimimo.com 获取）
 4. Chrome浏览器
 
 ### 部署步骤
@@ -75,6 +75,7 @@ start.bat
 - **Linux/Mac**: 参考 `README.md` 本文件
 - **Windows**: 参考 `WINDOWS_DEPLOYMENT.md` 文件
 - **快速入门**: 参考 `QUICKSTART_WINDOWS.md` 文件（部署脚本自动生成）
+- **配置说明**: 参考 `CONFIG_GUIDE.md` 文件（AI API配置详解）
 
 #### 步骤1：配置后端服务
 ```bash
@@ -149,7 +150,7 @@ xiaomi_mimo_browser_control/
 - Python 3.9+
 - aiohttp (异步HTTP)
 - websockets (WebSocket)
-- 小米Mimo模型API (OpenAI兼容)
+- AI模型API (OpenAI兼容)
 
 ### 浏览器插件
 - Chrome Extension Manifest V3
@@ -213,5 +214,5 @@ MIT License
 ## 致谢
 
 - 基于 [xiaomusic](https://github.com/hanxi/xiaomusic) 项目
-- 使用 [小米Mimo模型](https://platform.xiaomimimo.com/)
+- 使用 [AI模型](https://platform.xiaomimimo.com/)
 - 参考 [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/)

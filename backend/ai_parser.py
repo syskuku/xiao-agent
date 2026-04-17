@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AI指令解析器 - 使用小米Mimo模型
+AI指令解析器 - 使用支持OpenAI兼容格式的AI模型
 将自然语言指令转换为结构化的浏览器操作
 """
 
@@ -148,20 +148,20 @@ BROWSER_CONTROL_PROMPT = """
 class AIParser:
     """AI指令解析器"""
     
-    def __init__(self, mimo_config: dict):
+    def __init__(self, openai_config: dict):
         """初始化AI解析器"""
-        self.config = mimo_config
-        self.base_url = mimo_config.get('base_url', 'https://api.xiaomimimo.com/v1')
-        self.api_key = mimo_config.get('api_key', '')
-        self.model = mimo_config.get('model', 'MiMo-V2-Flash')
+        self.config = openai_config
+        self.base_url = openai_config.get('base_url', 'https://api.openai.com/v1')
+        self.api_key = openai_config.get('api_key', '')
+        self.model = openai_config.get('model', 'gpt-3.5-turbo')
         
         if not self.api_key:
-            logger.warning("未配置Mimo API Key，AI解析功能将不可用")
+            logger.warning("未配置AI API Key，AI解析功能将不可用")
     
     async def parse_command(self, command: str) -> Optional[Dict[str, Any]]:
         """解析用户指令"""
         if not self.api_key:
-            logger.error("Mimo API Key未配置")
+            logger.error("AI API Key未配置")
             return None
         
         try:

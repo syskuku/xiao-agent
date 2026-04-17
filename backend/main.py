@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-小爱音箱 + 小米Mimo模型 + 浏览器控制系统 - 主程序
+小爱音箱 + 兼容OpenAI格式的AI模型 + 浏览器控制系统 - 主程序
 基于xiaomusic原理，实现语音指令控制浏览器
 """
 
@@ -54,7 +54,7 @@ class BrowserControlSystem:
         """初始化所有组件"""
         try:
             # 初始化AI解析器
-            self.ai_parser = AIParser(self.config['mimo_api'])
+            self.ai_parser = AIParser(self.config['openai_api'])
             logger.info("AI解析器初始化完成")
             
             # 初始化WebSocket服务器
