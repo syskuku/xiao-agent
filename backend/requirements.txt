@@ -1,5 +1,6 @@
 aiohttp>=3.8.0
 websockets>=10.0
+mcp>=1.0.0
 asyncio
 json
 logging
