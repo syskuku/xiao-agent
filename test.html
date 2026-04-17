@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>xiao-agent Test</title>
+</head>
+<body>
+    <h1>xiao-agent WebSocket Test</h1>
+    <button onclick="testConnect()">Test Connection</button>
+    <button onclick="testOpenUrl()">Test Open URL</button>
+    <button onclick="testSearch()">Test Search</button>
+    <button onclick="testBack()">Test Back</button>
+    <button onclick="testScroll()">Test Scroll</button>
+    <pre id="log"></pre>
+    
+    <script>
+        let ws = null;
+        const log = document.getElementById('log');
+        
+        function addLog(msg) {
+            log.textContent += msg + '\n';
+            console.log(msg);
+        }
+        
+        function testConnect() {
+            addLog('Connecting to ws://localhost:8765...');
+            ws = new WebSocket('ws://localhost:8765');
+            
+            ws.onopen = () => {
+                addLog('✅ Connected!');
+            };
+            
+            ws.onmessage = (event) => {
+                addLog('Received: ' + event.data);
+            };
+            
+            ws.onerror = (error) => {
+                addLog('❌ Error: Connection failed');
+            };
+            
+            ws.onclose = () => {
+                addLog('❌ Disconnected');
+            };
+        }
+        
+        function testOpenUrl() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addLog('❌ Not connected!');
+                return;
+            }
+            ws.send(JSON.stringify({
+                action: 'open_url',
+                params: { url: 'https://www.baidu.com' }
+            }));
+            addLog('Sent: open_url -> baidu.com');
+        }
+        
+        function testSearch() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addLog('❌ Not connected!');
+                return;
+            }
+            ws.send(JSON.stringify({
+                action: 'search',
+                params: { query: 'today weather', engine: 'baidu' }
+            }));
+            addLog('Sent: search -> weather');
+        }
+        
+        function testBack() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addLog('❌ Not connected!');
+                return;
+            }
+            ws.send(JSON.stringify({ action: 'back', params: {} }));
+            addLog('Sent: back');
+        }
+        
+        function testScroll() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addLog('❌ Not connected!');
+                return;
+            }
+            ws.send(JSON.stringify({
+                action: 'scroll',
+                params: { direction: 'down', amount: 500 }
+            }));
+            addLog('Sent: scroll down');
+        }
+        
+        // Auto connect
+        testConnect();
+    </script>
+</body>
+</html>
