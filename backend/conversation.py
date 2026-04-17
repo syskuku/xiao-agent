@@ -2,6 +2,7 @@
 """
 对话记录管理器 - 基于xiaomusic原理
 负责从小爱音箱获取语音指令，并转发给MCP处理
+支持TTS播报功能
 """
 
 import asyncio
@@ -32,12 +33,18 @@ class ConversationManager:
         self.conversation_config = conversation_config
         self.ai_parser = ai_parser
         self.websocket_server = websocket_server
-        self.mcp_callback = mcp_callback  # MCP命令处理回调
+        self.mcp_callback = mcp_callback
         
         self.last_timestamp: Dict[str, int] = {}
         self.session: Optional[ClientSession] = None
         self.running = False
         self.devices = {}
+        
+        # TTS配置
+        self.tts_enabled = conversation_config.get('tts_enabled', True)
+        self.tts_confirm = conversation_config.get('tts_confirm', '好的，正在处理')
+        self.tts_success = conversation_config.get('tts_success', '已完成')
+        self.tts_error = conversation_config.get('tts_error', '抱歉，执行失败')
     
     async def start_listening(self):
         """开始监听对话记录"""
@@ -66,7 +73,6 @@ class ConversationManager:
     
     async def discover_devices(self):
         """发现小爱音箱设备"""
-        # 简化处理，实际需要从API获取
         self.devices = {
             "default_device": {
                 "hardware": "L06A",
@@ -124,31 +130,70 @@ class ConversationManager:
     async def handle_voice_command(self, device_id: str, query: str):
         """处理语音指令"""
         try:
-            # 1. 先尝试关键词匹配（快速响应）
+            # TTS播报：收到指令
+            if self.tts_enabled:
+                await self.do_tts(device_id, self.tts_confirm)
+            
+            # 1. 先尝试关键词匹配
             if self.conversation_config.get('enable_keyword_fallback', True):
                 action = self.match_keyword_command(query)
                 if action:
                     logger.info(f"关键词匹配成功: {query} -> {action}")
-                    await self.execute_action(device_id, action)
+                    result = await self.execute_action(device_id, action)
+                    await self播报结果(device_id, result)
                     return
             
-            # 2. 使用AI解析为MCP工具调用
+            # 2. 使用AI解析
             if self.conversation_config.get('enable_ai', True):
                 logger.info(f"使用AI解析指令: {query}")
                 
-                # 获取所有可用工具描述
                 tools_description = self.get_tools_description()
-                
                 ai_result = await self.ai_parser.parse_command(query, tools_description)
                 
                 if ai_result and ai_result.get("action"):
                     logger.info(f"AI解析成功: {ai_result}")
-                    await self.execute_action(device_id, ai_result)
+                    result = await self.execute_action(device_id, ai_result)
+                    await self.播报结果(device_id, result)
                 else:
                     logger.warning(f"AI解析失败: {query}")
+                    if self.tts_enabled:
+                        await self.do_tts(device_id, f"抱歉，无法理解指令：{query}")
                     
         except Exception as e:
             logger.error(f"处理语音指令失败: {e}")
+            if self.tts_enabled:
+                await self.do_tts(device_id, f"执行出错：{str(e)}")
+    
+    async def 播报结果(self, device_id: str, result: dict):
+        """播报执行结果"""
+        if not self.tts_enabled:
+            return
+        
+        if result and result.get('success'):
+            # 成功播报
+            message = result.get('message', self.tts_success)
+            await self.do_tts(device_id, f"{self.tts_success}，{message}")
+        else:
+            # 失败播报
+            error = result.get('error', '未知错误') if result else '执行失败'
+            await self.do_tts(device_id, f"{self.tts_error}，{error}")
+    
+    async def do_tts(self, device_id: str, text: str):
+        """执行TTS播报 - 使用小米原生TTS"""
+        if not text:
+            return
+        
+        try:
+            # 方式1: 使用小米MiNA服务（推荐）
+            # 这里需要调用xiaomusic的TTS接口
+            # 暂时记录日志，实际实现需要集成xiaomusic的MiNA服务
+            logger.info(f"🔊 TTS播报: {text}")
+            
+            # TODO: 集成xiaomusic的MiNA服务
+            # await self.mina_service.text_to_speech(device_id, text)
+            
+        except Exception as e:
+            logger.error(f"TTS播报失败: {e}")
     
     def get_tools_description(self) -> str:
         """获取所有可用工具的描述"""
@@ -159,19 +204,14 @@ class ConversationManager:
             desc = "可用工具列表：\n"
             for tool in tools:
                 desc += f"- {tool['name']}: {tool.get('description', '无描述')}\n"
-                if 'inputSchema' in tool:
-                    props = tool['inputSchema'].get('properties', {})
-                    if props:
-                        desc += f"  参数: {list(props.keys())}\n"
             return desc
         except:
             return "无可用工具"
     
     def match_keyword_command(self, query: str) -> Optional[dict]:
-        """关键词匹配（快速响应）"""
+        """关键词匹配"""
         query_lower = query.lower()
         
-        # 浏览器相关
         if "打开" in query_lower and "百度" in query_lower:
             return {"action": "browser_open_url", "params": {"url": "https://www.baidu.com"}}
         elif "打开" in query_lower and "淘宝" in query_lower:
@@ -182,32 +222,38 @@ class ConversationManager:
             if match:
                 keyword = match.group(1).strip()
                 return {"action": "browser_search", "params": {"query": keyword}}
-        
-        # 系统相关
-        elif "打开记事本" in query_lower or "打开notepad" in query_lower:
-            return {"action": "system_open_notepad", "params": {}}
+        elif "打开记事本" in query_lower:
+            return {"action": "system_open_app", "params": {"app_name": "notepad"}}
         elif "打开计算器" in query_lower:
-            return {"action": "system_open_calculator", "params": {}}
+            return {"action": "system_open_app", "params": {"app_name": "calculator"}}
+        elif "截图" in query_lower:
+            return {"action": "system_screenshot", "params": {}}
+        elif "锁定" in query_lower:
+            return {"action": "system_lock", "params": {}}
         
         return None
     
-    async def execute_action(self, device_id: str, action: dict):
-        """执行动作 - 优先调用MCP，失败则使用WebSocket"""
+    async def execute_action(self, device_id: str, action: dict) -> dict:
+        """执行动作"""
         try:
-            # 1. 优先尝试MCP
+            # 优先尝试MCP
             if self.mcp_callback:
                 result = await self.mcp_callback(device_id, action)
                 if result and result.get('success'):
                     logger.info(f"MCP执行成功: {action['action']}")
-                    return
+                    return result
             
-            # 2. 备选：通过WebSocket发送到浏览器插件
+            # 备选：通过WebSocket发送到浏览器插件
             if self.websocket_server:
                 await self.websocket_server.broadcast(action)
                 logger.info(f"已发送到浏览器插件: {action['action']}")
+                return {"success": True, "message": "已发送到浏览器"}
+                
+            return {"success": False, "error": "无可用的执行方式"}
                 
         except Exception as e:
             logger.error(f"执行动作失败: {e}")
+            return {"success": False, "error": str(e)}
     
     async def stop(self):
         """停止监听"""
