@@ -1,265 +1,159 @@
-# 小爱音箱 + AI模型 + 浏览器控制系统
+# xiao-agent - 小爱音箱智能控制中心
 
-## 系统概述
+> 🎤 小爱音箱 + MCP协议 = 控制一切
 
-本系统基于 `xiaomusic` 项目原理，实现通过小爱音箱语音指令控制浏览器的完整解决方案。系统使用支持OpenAI兼容格式的AI模型解析自然语言指令，并通过浏览器插件执行相应的浏览器操作。
+## 🎯 核心理念
 
-## 系统架构
-
-```
-小爱音箱语音 → 小米云端 → xiaomusic对话记录获取 → AI模型解析 → WebSocket转发 → Chrome插件 → 浏览器操作
-```
-
-### 🔌 Windows MCP 集成
-
-支持通过 Windows Copilot、Claude Desktop 等 AI 助手控制浏览器：
+**小爱音箱作为MCP Client入口**，通过MCP协议调用各种工具，实现对浏览器、Windows系统、智能家居等的语音控制。
 
 ```
-Copilot/Claude → MCP Server → Chrome插件 → 浏览器操作
+小爱音箱语音 → AI解析 → MCP协议 → 各种MCP Server → 执行操作
 ```
 
-## 核心组件
+## 🚀 支持的控制能力
 
-### 1. 后端服务 (Python)
-- 基于 `xiaomusic` 修改，保留其对话记录获取功能
-- 集成AI模型API（OpenAI兼容格式）
-- WebSocket服务器，用于与浏览器插件通信
-- 指令解析和路由
+### 🌐 浏览器控制
+- 打开网页、搜索内容、点击元素、输入文本
+- 支持百度、谷歌、必应等搜索引擎
 
-### 2. 浏览器插件 (Chrome Extension)
-- Manifest V3 架构
-- WebSocket客户端连接后端服务
-- 浏览器自动化引擎（使用Chrome DevTools Protocol）
-- 支持多种浏览器操作
+### 🖥️ Windows系统控制
+- 打开应用（记事本、计算器、文件管理器等）
+- 执行系统命令
+- 控制音量、截图、关机重启
+- 锁定电脑
 
-### 3. MCP Server（可选）
-- 支持 Model Context Protocol
-- 可被 Windows Copilot、Claude Desktop 等调用
-- 提供10+个浏览器控制工具
+### 📁 文件系统操作
+- 读写文件、创建目录
+- 搜索文件、复制移动
 
-## 快速开始
+### 🔌 可扩展
+- 任何支持MCP协议的工具都可以接入
+- 自定义MCP Server开发简单
 
-### 两种控制方式
+## 📦 快速部署
 
-| 控制方式 | 触发源 | 使用场景 |
-|---------|--------|---------|
-| 小爱音箱 | 语音指令 | 家庭场景，解放双手 |
-| Windows Copilot | AI对话 | 桌面办公，精准控制 |
-
-### 前置条件
-1. 小米账号和密码
-2. 小爱音箱设备
-3. AI模型API Key（从 platform.xiaomimimo.com 获取）
-4. Chrome浏览器
-
-### 部署步骤
-
-#### 🐧 Linux/Mac 部署
-```bash
-# 1. 运行部署脚本
-chmod +x scripts/setup.sh
-./scripts/setup.sh
-
-# 2. 配置系统
-nano backend/config.json  # 编辑配置文件
-
-# 3. 启动服务
-./start.sh
-```
-
-#### 🪟 Windows 部署
+### Windows部署
 ```cmd
-:: 1. 运行部署脚本（CMD）
-cd scripts
-setup.bat
+:: 1. 下载项目
+cd C:\xiao-agent
 
-:: 或者使用PowerShell
-cd scripts
-.\setup.ps1
+:: 2. 运行部署脚本
+scripts\setup.bat
 
-:: 2. 配置系统
-notepad backend\config.json  # 编辑配置文件
+:: 3. 编辑配置
+notepad backend\config.json
 
-:: 3. 启动服务
+:: 4. 启动服务
 start.bat
-:: 或者
-.\start.ps1
 ```
 
-#### 详细部署指南
-- **Linux/Mac**: 参考 `README.md` 本文件
-- **Windows**: 参考 `WINDOWS_DEPLOYMENT.md` 文件
-- **快速入门**: 参考 `QUICKSTART_WINDOWS.md` 文件（部署脚本自动生成）
-- **配置说明**: 参考 `CONFIG_GUIDE.md` 文件（AI API配置详解）
-
-#### 步骤1：配置后端服务
-```bash
-# Linux/Mac
-cd backend
-cp config.example.json config.json
-nano config.json  # 编辑配置文件
-
-# Windows
-cd backend
-copy config.example.json config.json
-notepad config.json  # 编辑配置文件
-```
-
-#### 步骤2：启动后端服务
-```bash
-pip install -r requirements.txt
-python main.py
-```
-
-> 注意：首次使用前需配置 `backend/config.json`，详见 `CONFIG_GUIDE.md`
-
-#### 步骤3：安装浏览器插件
-1. 打开Chrome浏览器，进入 `chrome://extensions/`
-2. 开启"开发者模式"
-3. 点击"加载已解压的扩展程序"
-4. 选择 `browser_extension` 目录
-
-#### 步骤4：测试系统
-对小爱音箱说："小爱同学，打开百度"
-
-### 🔌 可选：Windows MCP 集成
-
-让 Copilot 等 AI 助手也能控制浏览器：
-
-```bash
-# 1. 安装MCP依赖
-pip install mcp
-
-# 2. 配置MCP（创建 %APPDATA%\mcp\config.json）
-{
-  "mcpServers": {
-    "xiao-agent": {
-      "command": "python",
-      "args": ["mcp_server.py"],
-      "cwd": "C:\\path\	o\\xiao-agent"
-    }
-  }
-}
-
-# 3. 在Copilot中使用
-# 说："帮我打开百度搜索天气"
-```
-
-详细配置见 `MCP_INTEGRATION.md`
-
-## 支持的指令类型
-
-### 基础操作
-- `open_url` - 打开网页
-- `click` - 点击元素
-- `input` - 输入文本
-- `scroll` - 滚动页面
-- `screenshot` - 截图
-- `navigate` - 页面导航
-- `back/forward` - 前进后退
-
-### 智能操作
-- `extract` - 提取数据
-- `search` - 搜索内容
-- `fill_form` - 填写表单
-- `multi_step` - 多步骤任务
-
-## 项目结构
-
-```
-xiaomi_mimo_browser_control/
-├── backend/                 # 后端Python服务
-│   ├── main.py             # 主程序入口
-│   ├── config.json         # 配置文件
-│   ├── conversation.py     # 对话记录获取（基于xiaomusic）
-│   ├── ai_parser.py        # AI指令解析（小米AI）
-│   ├── websocket_server.py # WebSocket服务器
-│   └── requirements.txt    # Python依赖
-├── browser_extension/      # Chrome浏览器插件
-│   ├── manifest.json       # 插件配置
-│   ├── background.js       # 后台脚本
-│   ├── content.js          # 内容脚本
-│   ├── popup.html          # 弹出窗口
-│   ├── popup.js            # 弹出窗口逻辑
-│   └── icons/              # 图标文件
-├── mcp_server.py           # MCP服务器（可选）
-├── mcp_tools.py            # MCP工具定义
-├── scripts/                # 部署脚本
-├── CONFIG_GUIDE.md         # 配置说明
-├── MCP_INTEGRATION.md      # MCP集成文档
-├── WINDOWS_DEPLOYMENT.md   # Windows部署指南
-└── WINDOWS_QUICKSTART.md   # Windows快速开始
-```
-
-## 技术栈
-
-### 后端
-- Python 3.9+
-- aiohttp (异步HTTP)
-- websockets (WebSocket)
-- AI模型API (OpenAI兼容)
-
-### 浏览器插件
-- Chrome Extension Manifest V3
-- Chrome DevTools Protocol
-- WebSocket API
-
-## 配置说明
-
-### config.json
+### 配置示例 (backend/config.json)
 ```json
 {
   "xiaomi": {
-    "username": "your_xiaomi_username",
-    "password": "your_xiaomi_password"
+    "username": "您的小米账号",
+    "password": "您的小米密码"
   },
   "openai_api": {
-    "base_url": "https://api.xiaomimimo.com/v1",
-    "api_key": "your_openai_api_key",
-    "model": "MiMo-V2-Flash"
+    "base_url": "https://api.openai.com/v1",
+    "api_key": "您的API密钥",
+    "model": "gpt-3.5-turbo"
   },
-  "websocket": {
-    "host": "localhost",
-    "port": 8765
-  },
-  "browser_control": {
-    "enable_ai": true,
-    "default_timeout": 10
-  }
+  "mcp_servers": [
+    {
+      "name": "windows",
+      "type": "stdio",
+      "command": "python",
+      "args": ["mcp_windows_server.py"]
+    },
+    {
+      "name": "browser",
+      "type": "stdio",
+      "command": "python",
+      "args": ["mcp_browser_server.py"]
+    }
+  ]
 }
 ```
 
-## 安全注意事项
+## 🎤 使用示例
 
-1. **API密钥安全**：不要将API密钥提交到版本控制系统
-2. **网络安全**：建议在本地网络使用，如需公网访问请配置HTTPS
-3. **权限控制**：浏览器插件需要谨慎授予权限
-4. **操作确认**：敏感操作（如支付）需要用户确认
+### 语音指令示例
+| 语音指令 | 执行操作 |
+|---------|---------|
+| "小爱同学，打开百度" | 浏览器打开百度 |
+| "小爱同学，搜索今天天气" | 百度搜索天气 |
+| "小爱同学，打开记事本" | 启动Windows记事本 |
+| "小爱同学，打开计算器" | 启动Windows计算器 |
+| "小爱同学，截图" | 截取屏幕截图 |
+| "小爱同学，锁定电脑" | 锁定Windows |
+| "小爱同学，关机" | 关闭电脑 |
 
-## 扩展开发
+## 📁 项目结构
 
-### 添加新的浏览器操作
-1. 在 `ai_parser.py` 中添加新的操作类型
-2. 在 `background.js` 中实现对应的执行函数
-3. 更新指令解析提示词
+```
+xiao-agent/
+├── main.py                 # 主程序入口
+├── mcp_client.py           # MCP客户端管理器
+├── mcp_windows_server.py   # Windows系统MCP Server
+├── mcp_browser_server.py   # 浏览器MCP Server
+├── backend/
+│   ├── conversation.py     # 对话记录获取
+│   ├── ai_parser.py        # AI指令解析
+│   └── websocket_server.py # WebSocket服务
+├── browser_extension/      # Chrome插件
+├── scripts/                # 部署脚本
+└── 文档/
+    ├── CONFIG_GUIDE.md     # 配置说明
+    ├── MCP_INTEGRATION.md  # MCP集成文档
+    └── WINDOWS_DEPLOYMENT.md
+```
 
-### 自定义AI模型
-修改 `config.json` 中的 `openai_api` 配置，可以使用其他OpenAI兼容的模型。
+## 🔌 MCP架构
 
-## 故障排除
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      小爱音箱                                │
+│                   (语音指令入口)                             │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    xiao-agent 主程序                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
+│  │ 对话记录    │  │ AI解析      │  │ MCP Client  │         │
+│  │ 获取器      │  │ (OpenAI)    │  │ 管理器      │         │
+│  └─────────────┘  └─────────────┘  └─────────────┘         │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ MCP协议
+┌─────────────────────────────────────────────────────────────┐
+│                    MCP Server 集群                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
+│  │ 浏览器      │  │ Windows     │  │ 文件系统    │         │
+│  │ MCP Server  │  │ MCP Server  │  │ MCP Server  │         │
+│  └─────────────┘  └─────────────┘  └─────────────┘         │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    执行结果                                  │
+│        浏览器操作 / 系统命令 / 文件操作 / 更多...            │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### 常见问题
-1. **对话记录获取失败**：检查小米账号密码是否正确
-2. **AI解析失败**：检查AI API Key是否有效
-3. **插件连接失败**：确保后端WebSocket服务正在运行
-4. **浏览器操作失败**：检查Chrome扩展权限设置
+## 📖 详细文档
 
-## 许可证
+- **快速开始**: `WINDOWS_QUICKSTART.md`
+- **配置说明**: `CONFIG_GUIDE.md`
+- **MCP集成**: `MCP_INTEGRATION.md`
+- **完整部署**: `WINDOWS_DEPLOYMENT.md`
+
+## 📄 许可证
 
 MIT License
 
-## 致谢
+## 🙏 致谢
 
-- 基于 [xiaomusic](https://github.com/hanxi/xiaomusic) 项目
-- 使用 [AI模型](https://platform.xiaomimimo.com/)
-- 参考 [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/)
+- 基于 [xiaomusic](https://github.com/hanxi/xiaomusic)
+- 使用 [MCP协议](https://modelcontextprotocol.io/)

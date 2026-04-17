@@ -1,0 +1,28 @@
+{
+  "mcp_servers": [
+    {
+      "name": "browser",
+      "description": "浏览器控制MCP Server",
+      "type": "stdio",
+      "command": "python",
+      "args": ["mcp_browser_server.py"],
+      "cwd": "."
+    },
+    {
+      "name": "filesystem",
+      "description": "文件系统操作MCP Server",
+      "type": "stdio", 
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users"],
+      "cwd": null
+    },
+    {
+      "name": "windows",
+      "description": "Windows系统控制MCP Server",
+      "type": "stdio",
+      "command": "python",
+      "args": ["mcp_windows_server.py"],
+      "cwd": "."
+    }
+  ]
+}
