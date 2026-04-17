@@ -12,14 +12,11 @@
     "host": "localhost",
     "port": 8765
   },
-  "browser_control": {
-    "enable_ai": true,
-    "default_timeout": 10,
-    "enable_keyword_fallback": true
-  },
   "conversation": {
     "pull_interval": 2,
     "enable_pull_ask": true,
+    "enable_keyword_fallback": true,
+    "enable_ai": true,
     "tts_enabled": true,
     "tts_confirm": "好的，正在处理",
     "tts_success": "已完成",
@@ -30,7 +27,8 @@
       "name": "windows",
       "type": "stdio",
       "command": "python",
-      "args": ["mcp_windows_server.py"]
+      "args": ["mcp_windows_server.py"],
+      "cwd": ".."
     }
   ]
 }

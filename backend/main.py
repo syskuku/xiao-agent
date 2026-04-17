@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-小爱音箱 + 兼容OpenAI格式的AI模型 + 浏览器控制系统 - 主程序
-基于xiaomusic原理，实现语音指令控制浏览器
+xiao-agent 主程序
+小爱音箱语音控制 - 支持浏览器和Windows MCP控制
 """
 
 import asyncio
@@ -10,14 +10,12 @@ import logging
 import sys
 from pathlib import Path
 
-# 添加当前目录到Python路径
-sys.path.append(str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from conversation import ConversationManager
-from ai_parser import AIParser
-from websocket_server import WebSocketServer
+from backend.conversation import ConversationManager
+from backend.ai_parser import AIParser
+from backend.websocket_server import WebSocketServer
 
-# 配置日志
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -28,11 +26,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class BrowserControlSystem:
-    """浏览器控制系统主类"""
+
+class XiaoAgent:
+    """xiao-agent 主类"""
     
     def __init__(self, config_path: str = "config.json"):
-        """初始化系统"""
         self.config = self.load_config(config_path)
         self.conversation_manager = None
         self.ai_parser = None
@@ -40,7 +38,6 @@ class BrowserControlSystem:
         self.running = False
         
     def load_config(self, config_path: str) -> dict:
-        """加载配置文件"""
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
@@ -52,85 +49,101 @@ class BrowserControlSystem:
     
     async def initialize(self):
         """初始化所有组件"""
-        try:
-            # 初始化AI解析器
-            self.ai_parser = AIParser(self.config['openai_api'])
-            logger.info("AI解析器初始化完成")
-            
-            # 初始化WebSocket服务器
-            self.websocket_server = WebSocketServer(
-                host=self.config['websocket']['host'],
-                port=self.config['websocket']['port']
-            )
-            logger.info("WebSocket服务器初始化完成")
-            
-            # 初始化对话记录管理器
-            self.conversation_manager = ConversationManager(
-                xiaomi_config=self.config['xiaomi'],
-                conversation_config=self.config['conversation'],
-                ai_parser=self.ai_parser,
-                websocket_server=self.websocket_server
-            )
-            logger.info("对话记录管理器初始化完成")
-            
-        except Exception as e:
-            logger.error(f"组件初始化失败: {e}")
-            raise
+        logger.info("正在初始化 xiao-agent...")
+        
+        # 1. AI解析器
+        self.ai_parser = AIParser(self.config.get('openai_api', {}))
+        logger.info("AI解析器初始化完成")
+        
+        # 2. WebSocket服务器
+        ws_config = self.config.get('websocket', {'host': 'localhost', 'port': 8765})
+        self.websocket_server = WebSocketServer(
+            host=ws_config.get('host', 'localhost'),
+            port=ws_config.get('port', 8765)
+        )
+        logger.info("WebSocket服务器初始化完成")
+        
+        # 3. 对话记录管理器
+        self.conversation_manager = ConversationManager(
+            xiaomi_config=self.config.get('xiaomi', {}),
+            conversation_config=self.config.get('conversation', {}),
+            ai_parser=self.ai_parser,
+            websocket_server=self.websocket_server,
+            mcp_callback=self.handle_mcp_command
+        )
+        logger.info("对话记录管理器初始化完成")
+        
+        # 4. 初始化MCP
+        await self.init_mcp()
+        
+        logger.info("xiao-agent 初始化完成!")
+    
+    async def init_mcp(self):
+        """初始化MCP服务器"""
+        mcp_servers = self.config.get('mcp_servers', [])
+        
+        if not mcp_servers:
+            logger.info("未配置MCP服务器，仅使用浏览器控制")
+            return
+        
+        for server in mcp_servers:
+            name = server.get('name')
+            logger.info(f"MCP服务器配置: {name}")
+        
+        logger.info(f"已配置 {len(mcp_servers)} 个MCP服务器")
+    
+    async def handle_mcp_command(self, device_id: str, command: dict) -> dict:
+        """处理MCP命令"""
+        action = command.get('action')
+        params = command.get('params', {})
+        
+        logger.info(f"执行命令: {action}, 参数: {params}")
+        
+        # 通过WebSocket发送到浏览器插件
+        if self.websocket_server:
+            await self.websocket_server.broadcast({
+                "type": "command",
+                "action": action,
+                "params": params
+            })
+            logger.info(f"命令已发送到浏览器插件: {action}")
+            return {"success": True, "message": f"已执行: {action}"}
+        
+        return {"success": False, "error": "无可用的执行方式"}
     
     async def start(self):
-        """启动系统"""
-        try:
-            self.running = True
-            logger.info("正在启动浏览器控制系统...")
-            
-            # 启动WebSocket服务器
-            ws_task = asyncio.create_task(self.websocket_server.start())
-            
-            # 启动对话记录监听
-            conversation_task = asyncio.create_task(self.conversation_manager.start_listening())
-            
-            logger.info("系统启动完成，等待语音指令...")
-            logger.info(f"WebSocket服务地址: ws://{self.config['websocket']['host']}:{self.config['websocket']['port']}")
-            
-            # 等待任务完成
-            await asyncio.gather(ws_task, conversation_task)
-            
-        except Exception as e:
-            logger.error(f"系统启动失败: {e}")
-            raise
+        """启动服务"""
+        self.running = True
+        logger.info("正在启动 xiao-agent...")
+        
+        ws_task = asyncio.create_task(self.websocket_server.start())
+        conv_task = asyncio.create_task(self.conversation_manager.start_listening())
+        
+        logger.info("xiao-agent 启动完成!")
+        logger.info("等待语音指令...")
+        
+        await asyncio.gather(ws_task, conv_task)
     
     async def stop(self):
-        """停止系统"""
+        """停止服务"""
         self.running = False
-        if self.conversation_manager:
-            await self.conversation_manager.stop()
-        if self.websocket_server:
-            await self.websocket_server.stop()
-        logger.info("系统已停止")
+        logger.info("xiao-agent 已停止")
+
 
 async def main():
-    """主函数"""
-    system = None
+    agent = None
     try:
-        # 创建系统实例
-        system = BrowserControlSystem()
-        
-        # 初始化系统
-        await system.initialize()
-        
-        # 启动系统
-        await system.start()
-        
+        agent = XiaoAgent()
+        await agent.initialize()
+        await agent.start()
     except KeyboardInterrupt:
-        logger.info("收到中断信号，正在停止系统...")
+        logger.info("收到中断信号")
     except Exception as e:
-        logger.error(f"系统运行出错: {e}")
+        logger.error(f"启动失败: {e}")
     finally:
-        if system:
-            await system.stop()
+        if agent:
+            await agent.stop()
+
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        logger.info("程序已退出")
+    asyncio.run(main())
