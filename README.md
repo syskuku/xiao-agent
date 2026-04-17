@@ -10,6 +10,14 @@
 小爱音箱语音 → 小米云端 → xiaomusic对话记录获取 → AI模型解析 → WebSocket转发 → Chrome插件 → 浏览器操作
 ```
 
+### 🔌 Windows MCP 集成
+
+支持通过 Windows Copilot、Claude Desktop 等 AI 助手控制浏览器：
+
+```
+Copilot/Claude → MCP Server → Chrome插件 → 浏览器操作
+```
+
 ## 核心组件
 
 ### 1. 后端服务 (Python)
@@ -24,12 +32,19 @@
 - 浏览器自动化引擎（使用Chrome DevTools Protocol）
 - 支持多种浏览器操作
 
-### 3. 通信协议
-- 基于JSON的指令格式
-- 双向WebSocket通信
-- 心跳机制和重连逻辑
+### 3. MCP Server（可选）
+- 支持 Model Context Protocol
+- 可被 Windows Copilot、Claude Desktop 等调用
+- 提供10+个浏览器控制工具
 
 ## 快速开始
+
+### 两种控制方式
+
+| 控制方式 | 触发源 | 使用场景 |
+|---------|--------|---------|
+| 小爱音箱 | 语音指令 | 家庭场景，解放双手 |
+| Windows Copilot | AI对话 | 桌面办公，精准控制 |
 
 ### 前置条件
 1. 小米账号和密码
@@ -107,6 +122,31 @@ python main.py
 #### 步骤4：测试系统
 对小爱音箱说："小爱同学，打开百度"
 
+### 🔌 可选：Windows MCP 集成
+
+让 Copilot 等 AI 助手也能控制浏览器：
+
+```bash
+# 1. 安装MCP依赖
+pip install mcp
+
+# 2. 配置MCP（创建 %APPDATA%\mcp\config.json）
+{
+  "mcpServers": {
+    "xiao-agent": {
+      "command": "python",
+      "args": ["mcp_server.py"],
+      "cwd": "C:\\path\	o\\xiao-agent"
+    }
+  }
+}
+
+# 3. 在Copilot中使用
+# 说："帮我打开百度搜索天气"
+```
+
+详细配置见 `MCP_INTEGRATION.md`
+
 ## 支持的指令类型
 
 ### 基础操作
@@ -142,8 +182,13 @@ xiaomi_mimo_browser_control/
 │   ├── popup.html          # 弹出窗口
 │   ├── popup.js            # 弹出窗口逻辑
 │   └── icons/              # 图标文件
-├── docs/                   # 文档
-└── scripts/                # 部署脚本
+├── mcp_server.py           # MCP服务器（可选）
+├── mcp_tools.py            # MCP工具定义
+├── scripts/                # 部署脚本
+├── CONFIG_GUIDE.md         # 配置说明
+├── MCP_INTEGRATION.md      # MCP集成文档
+├── WINDOWS_DEPLOYMENT.md   # Windows部署指南
+└── WINDOWS_QUICKSTART.md   # Windows快速开始
 ```
 
 ## 技术栈
