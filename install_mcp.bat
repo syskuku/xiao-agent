@@ -1,51 +1,40 @@
 @echo off
-chcp 65001 >nul 2>&1
 
 echo ==========================================
-echo xiao-agent - Install MCP Support
+echo Install MCP for xiao-agent
 echo ==========================================
 echo.
 
-:: 获取脚本所在目录的上级目录（项目根目录）
-set "PROJECT_DIR=%~dp0.."
-cd /d "%PROJECT_DIR%"
-
-echo Current directory: %CD%
+cd /d "%~dp0.."
+echo Directory: %CD%
 echo.
 
-:: 检查虚拟环境
 if not exist "backend\venv" (
-    echo [ERROR] Virtual environment not found!
-    echo Please run scripts\setup.bat first
+    echo [ERROR] Run setup.bat first!
     pause
     exit /b 1
 )
 
-:: 激活虚拟环境
-echo [1/2] Activating virtual environment...
-call "%CD%\backend\venv\Scripts\activate.bat"
-if %errorlevel% neq 0 (
-    echo [ERROR] Failed to activate virtual environment
+echo Activating venv...
+call backend\venv\Scripts\activate.bat
+if errorlevel (
+    echo [ERROR] Activate failed
     pause
     exit /b 1
 )
-echo Done.
 
-:: 安装MCP
 echo.
-echo [2/2] Installing MCP...
-python -m pip install mcp
-if %errorlevel% neq 0 (
-    echo [ERROR] Failed to install MCP
+echo Installing MCP...
+pip install mcp
+if errorlevel (
+    echo [ERROR] Install failed
     pause
     exit /b 1
 )
 
 echo.
 echo ============================================
-echo MCP installed successfully!
+echo SUCCESS! MCP installed!
 echo ============================================
-echo.
-echo Restart xiao-agent to use Windows control.
 echo.
 pause
