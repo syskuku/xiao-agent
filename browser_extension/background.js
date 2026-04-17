@@ -2,14 +2,14 @@
  * xiao-agent - Background Service Worker
  */
 
-let ws = null;
-let isConnected = false;
+// Global variables
+self.ws = null;
+self.isConnected = false;
 
 // Initialize
 async function init() {
   console.log('Initializing...');
   await connect();
-  setupMessageListener();
 }
 
 // Connect to WebSocket
@@ -22,14 +22,14 @@ async function connect() {
   console.log(`Connecting to ${wsUrl}...`);
   
   try {
-    ws = new WebSocket(wsUrl);
+    self.ws = new WebSocket(wsUrl);
     
-    ws.onopen = () => {
+    self.ws.onopen = () => {
       console.log('Connected!');
-      isConnected = true;
+      self.isConnected = true;
     };
     
-    ws.onmessage = (event) => {
+    self.ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
         console.log('Received:', message);
@@ -42,13 +42,13 @@ async function connect() {
       }
     };
     
-    ws.onclose = () => {
+    self.ws.onclose = () => {
       console.log('Disconnected');
-      isConnected = false;
+      self.isConnected = false;
       setTimeout(connect, 3000);
     };
     
-    ws.onerror = (error) => {
+    self.ws.onerror = (error) => {
       console.error('WebSocket error');
     };
     
@@ -104,12 +104,14 @@ async function executeCommand(message) {
         
       case 'back':
       case 'browser_back':
-        await goBack();
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tab) await chrome.tabs.goBack(tab.id);
         break;
         
       case 'forward':
       case 'browser_forward':
-        await goForward();
+        const [tab2] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tab2) await chrome.tabs.goForward(tab2.id);
         break;
         
       default:
@@ -132,28 +134,6 @@ async function executeInTab(func, args) {
   });
   
   return results[0]?.result;
-}
-
-// Navigate back
-async function goBack() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab) await chrome.tabs.goBack(tab.id);
-}
-
-// Navigate forward
-async function goForward() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab) await chrome.tabs.goForward(tab.id);
-}
-
-// Message listener
-function setupMessageListener() {
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'status') {
-      sendResponse({ connected: isConnected });
-    }
-    return true;
-  });
 }
 
 // Start
