@@ -96,6 +96,8 @@ pip install -r requirements.txt
 python main.py
 ```
 
+> 注意：首次使用前需配置 `backend/config.json`，详见 `CONFIG_GUIDE.md`
+
 #### 步骤3：安装浏览器插件
 1. 打开Chrome浏览器，进入 `chrome://extensions/`
 2. 开启"开发者模式"
@@ -130,7 +132,7 @@ xiaomi_mimo_browser_control/
 │   ├── main.py             # 主程序入口
 │   ├── config.json         # 配置文件
 │   ├── conversation.py     # 对话记录获取（基于xiaomusic）
-│   ├── ai_parser.py        # AI指令解析（小米Mimo）
+│   ├── ai_parser.py        # AI指令解析（小米AI）
 │   ├── websocket_server.py # WebSocket服务器
 │   └── requirements.txt    # Python依赖
 ├── browser_extension/      # Chrome浏览器插件
@@ -166,9 +168,9 @@ xiaomi_mimo_browser_control/
     "username": "your_xiaomi_username",
     "password": "your_xiaomi_password"
   },
-  "mimo_api": {
+  "openai_api": {
     "base_url": "https://api.xiaomimimo.com/v1",
-    "api_key": "your_mimo_api_key",
+    "api_key": "your_openai_api_key",
     "model": "MiMo-V2-Flash"
   },
   "websocket": {
@@ -197,13 +199,13 @@ xiaomi_mimo_browser_control/
 3. 更新指令解析提示词
 
 ### 自定义AI模型
-修改 `config.json` 中的 `mimo_api` 配置，可以使用其他OpenAI兼容的模型。
+修改 `config.json` 中的 `openai_api` 配置，可以使用其他OpenAI兼容的模型。
 
 ## 故障排除
 
 ### 常见问题
 1. **对话记录获取失败**：检查小米账号密码是否正确
-2. **AI解析失败**：检查Mimo API Key是否有效
+2. **AI解析失败**：检查AI API Key是否有效
 3. **插件连接失败**：确保后端WebSocket服务正在运行
 4. **浏览器操作失败**：检查Chrome扩展权限设置
 
