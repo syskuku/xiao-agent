@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 320px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      color: #333;
+      background: #fff;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      color: #1a73e8;
+    }
+    
+    .status {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    
+    .status-indicator.connected {
+      background: #34a853;
+      box-shadow: 0 0 0 2px rgba(52, 168, 83, 0.2);
+    }
+    
+    .status-indicator.disconnected {
+      background: #ea4335;
+      box-shadow: 0 0 0 2px rgba(234, 67, 53, 0.2);
+    }
+    
+    .status-text {
+      font-weight: 500;
+    }
+    
+    .section {
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #5f6368;
+    }
+    
+    .form-group {
+      margin-bottom: 12px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+      color: #5f6368;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    }
+    
+    .button {
+      width: 100%;
+      padding: 10px 16px;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .button:hover {
+      background: #1557b0;
+    }
+    
+    .button:disabled {
+      background: #dadce0;
+      cursor: not-allowed;
+    }
+    
+    .button.secondary {
+      background: #fff;
+      color: #1a73e8;
+      border: 1px solid #dadce0;
+    }
+    
+    .button.secondary:hover {
+      background: #f8f9fa;
+    }
+    
+    .log {
+      max-height: 150px;
+      overflow-y: auto;
+      background: #f8f9fa;
+      border-radius: 4px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    
+    .log-entry {
+      margin-bottom: 4px;
+      padding: 4px;
+      border-radius: 2px;
+    }
+    
+    .log-entry.info {
+      color: #1a73e8;
+    }
+    
+    .log-entry.success {
+      color: #34a853;
+    }
+    
+    .log-entry.error {
+      color: #ea4335;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
+      font-size: 12px;
+      color: #5f6368;
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .tab.active {
+      border-bottom-color: #1a73e8;
+      color: #1a73e8;
+      font-weight: 500;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>小爱音箱浏览器控制器</h1>
+    <div style="font-size: 12px; color: #5f6368; margin-top: 4px;">
+      通过语音指令控制浏览器
+    </div>
+  </div>
+  
+  <div class="status">
+    <div class="status-indicator disconnected" id="statusIndicator"></div>
+    <div class="status-text" id="statusText">未连接</div>
+  </div>
+  
+  <div class="tabs">
+    <div class="tab active" data-tab="settings">设置</div>
+    <div class="tab" data-tab="logs">日志</div>
+    <div class="tab" data-tab="help">帮助</div>
+  </div>
+  
+  <div class="tab-content active" id="settings">
+    <div class="section">
+      <div class="section-title">WebSocket 连接</div>
+      <div class="form-group">
+        <label for="host">主机地址</label>
+        <input type="text" id="host" placeholder="localhost" value="localhost">
+      </div>
+      <div class="form-group">
+        <label for="port">端口</label>
+        <input type="number" id="port" placeholder="8765" value="8765">
+      </div>
+      <button class="button" id="connectBtn">连接</button>
+      <button class="button secondary" id="disconnectBtn" style="margin-top: 8px;" disabled>断开连接</button>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">快捷操作</div>
+      <button class="button secondary" id="testBtn">测试连接</button>
+      <button class="button secondary" id="screenshotBtn" style="margin-top: 8px;">截图</button>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="logs">
+    <div class="section">
+      <div class="section-title">操作日志</div>
+      <div class="log" id="logContainer">
+        <div class="log-entry info">插件已加载</div>
+      </div>
+      <button class="button secondary" id="clearLogBtn" style="margin-top: 8px;">清空日志</button>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="help">
+    <div class="section">
+      <div class="section-title">使用说明</div>
+      <div style="font-size: 12px; line-height: 1.5;">
+        <p><strong>1. 配置连接</strong></p>
+        <p>在"设置"标签页中配置WebSocket服务器地址和端口。</p>
+        
+        <p><strong>2. 语音指令示例</strong></p>
+        <ul style="padding-left: 20px;">
+          <li>"小爱同学，打开百度"</li>
+          <li>"小爱同学，搜索iPhone 15"</li>
+          <li>"小爱同学，点击搜索按钮"</li>
+          <li>"小爱同学，向下滚动"</li>
+        </ul>
+        
+        <p><strong>3. 支持的操作</strong></p>
+        <ul style="padding-left: 20px;">
+          <li>打开网页</li>
+          <li>搜索内容</li>
+          <li>点击元素</li>
+          <li>输入文本</li>
+          <li>滚动页面</li>
+          <li>截图</li>
+          <li>数据提取</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    基于 xiaomusic 原理 · 使用小米Mimo模型
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

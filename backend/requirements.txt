@@ -1,0 +1,8 @@
+aiohttp>=3.8.0
+websockets>=10.0
+asyncio
+json
+logging
+time
+re
+typing

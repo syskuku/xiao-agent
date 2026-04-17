@@ -1,0 +1,26 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景圆形 -->
+  <circle cx="64" cy="64" r="60" fill="#1a73e8"/>
+  
+  <!-- 麦克风图标 -->
+  <g fill="white">
+    <!-- 麦克风主体 -->
+    <rect x="54" y="30" width="20" height="40" rx="10" ry="10"/>
+    
+    <!-- 麦克风支架 -->
+    <path d="M44 60 L44 70 Q44 90 64 90 Q84 90 84 70 L84 60" 
+          stroke="white" stroke-width="6" fill="none" stroke-linecap="round"/>
+    
+    <!-- 麦克风底座 -->
+    <line x1="64" y1="90" x2="64" y2="100" stroke="white" stroke-width="6" stroke-linecap="round"/>
+    <line x1="50" y1="100" x2="78" y2="100" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  
+  <!-- 声波效果 -->
+  <g stroke="white" stroke-width="2" fill="none" opacity="0.6">
+    <path d="M30 50 Q20 64 30 78"/>
+    <path d="M98 50 Q108 64 98 78"/>
+    <path d="M20 40 Q5 64 20 88"/>
+    <path d="M108 40 Q123 64 108 88"/>
+  </g>
+</svg>

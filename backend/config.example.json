@@ -1,0 +1,24 @@
+{
+  "xiaomi": {
+    "username": "your_xiaomi_username",
+    "password": "your_xiaomi_password"
+  },
+  "mimo_api": {
+    "base_url": "https://api.xiaomimimo.com/v1",
+    "api_key": "your_mimo_api_key",
+    "model": "MiMo-V2-Flash"
+  },
+  "websocket": {
+    "host": "localhost",
+    "port": 8765
+  },
+  "browser_control": {
+    "enable_ai": true,
+    "default_timeout": 10,
+    "enable_keyword_fallback": true
+  },
+  "conversation": {
+    "pull_interval": 2,
+    "enable_pull_ask": true
+  }
+}
